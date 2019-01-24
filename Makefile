@@ -7,6 +7,7 @@ COMMIT=`git rev-parse --short HEAD`
 TAG?=dev
 BUILD?=-dev
 CWD=$(PWD)
+PACKAGES=$(shell go list ./... | grep -v -e /vendor/)
 
 all: binaries
 
@@ -19,6 +20,12 @@ binaries: daemon
 daemon: bindir
 	@>&2 echo " -> building daemon ${COMMIT}${BUILD}"
 	@cd cmd/$(APP) && CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-w -X github.com/$(REPO)/version.GitCommit=$(COMMIT) -X github.com/$(REPO)/version.Build=$(BUILD)" -o ../../bin/$(APP) .
+
+generate:
+	@>&2 echo " -> building protobufs for grpc"
+	@echo ${PACKAGES} | xargs protobuild -quiet
+	@>&2 echo " -> building protobufs for grpc-gateway"
+	@echo ${PACKAGES} | xargs protobuild -f Protobuild.grpc-gateway.toml -quiet
 
 docker-generate:
 	@echo "** This uses a separate Dockerfile (Dockerfile.dev) **"
