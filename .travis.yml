@@ -13,5 +13,8 @@ branches:
   only:
     - master
 
+before_install:
+  - go mod vendor
+
 script:
   - go test -short -v -cover $(go list ./... | grep -v -e /vendor/)
